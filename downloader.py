@@ -7,8 +7,24 @@ from pathlib import Path
 DOWNLOADS_DIR = Path("downloads")
 DOWNLOADS_DIR.mkdir(exist_ok=True)
 
+import os
+
+def get_base_options() -> dict:
+    options = {}
+    browser = os.getenv("COOKIES_BROWSER", "edge")
+    if browser.lower() != "none":
+        options["cookiesfrombrowser"] = (browser,)
+    cookies_file = os.getenv("COOKIES_FILE")
+    if cookies_file:
+        options["cookiefile"] = cookies_file
+    user_agent = os.getenv("USER_AGENT")
+    if user_agent:
+        options["http_headers"] = {"User-Agent": user_agent}
+    return options
+
 def get_video_info(url: str) -> dict:
     options = {
+        **get_base_options(),
         "quiet": True,
         "noplaylist": True,
     }
@@ -102,6 +118,7 @@ def download_video(url: str, job_id: str, resolution: int = None, progress_dict:
         format_str = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
         
     options = {
+        **get_base_options(),
         "format": format_str,
         "outtmpl": str(job_dir / "%(id)s.%(ext)s"),
         "restrictfilenames": True,
@@ -126,6 +143,7 @@ def download_audio(url: str, job_id: str, progress_dict: dict = None) -> Path:
     job_dir.mkdir(parents=True, exist_ok=True)
     
     options = {
+        **get_base_options(),
         "format": "bestaudio/best",
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
@@ -152,6 +170,7 @@ def download_subtitles(url: str, job_id: str) -> Path:
     job_dir.mkdir(parents=True, exist_ok=True)
     
     options = {
+        **get_base_options(),
         "skip_download": True,
         "writesubtitles": True,
         "writeautomaticsub": True,
