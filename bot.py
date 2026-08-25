@@ -133,18 +133,19 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
             await callback_query.answer("No thumbnail available.", show_alert=True)
         return
 
+    await callback_query.message.edit_caption(
+        caption=f"{original_caption}\n\n⏳ Starting download..."
+    )
+    
+    # Send downloading sticker
+    sticker_msg = None
     try:
-        await callback_query.message.edit_media(
-            media=InputMediaAnimation(
-                media=FSInputFile("downloading.webm"),
-                caption=f"{original_caption}\n\n⏳ Starting download...",
-                parse_mode="Markdown"
-            )
+        sticker_msg = await bot.send_sticker(
+            chat_id=callback_query.message.chat.id,
+            sticker=FSInputFile("downloading.webm")
         )
     except Exception:
-        await callback_query.message.edit_caption(
-            caption=f"{original_caption}\n\n⏳ Starting download..."
-        )
+        pass
     
     job_id = str(uuid.uuid4())
     job_dir = Path("downloads") / job_id
@@ -224,6 +225,11 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
     finally:
         if job_dir.exists():
             shutil.rmtree(job_dir, ignore_errors=True)
+        if sticker_msg:
+            try:
+                await sticker_msg.delete()
+            except:
+                pass
             
     await callback_query.answer()
 
