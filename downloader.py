@@ -20,6 +20,10 @@ def get_base_options() -> dict:
     options["extractor_args"] = {
         "youtube": ["player_client=default,-tv,-web_safari,-web_embedded,-mweb"]
     }
+    
+    # Enable NodeJS for solving YouTube's JS challenges (Deno is default)
+    options["js_rt"] = "node"
+
 
     
     browser = os.getenv("COOKIES_BROWSER", "edge")
