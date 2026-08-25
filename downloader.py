@@ -11,6 +11,17 @@ import os
 
 def get_base_options() -> dict:
     options = {}
+    
+    # Bypass "The page needs to be reloaded" bot detection
+    from yt_dlp.networking.impersonate import ImpersonateTarget
+    options["impersonate"] = ImpersonateTarget.from_str("chrome")
+    
+    # Avoid clients that frequently cause UNPLAYABLE or PO Token errors
+    options["extractor_args"] = {
+        "youtube": ["player_client=default,-tv,-web_safari,-web_embedded,-mweb"]
+    }
+
+    
     browser = os.getenv("COOKIES_BROWSER", "edge")
     if browser.lower() != "none":
         options["cookiesfrombrowser"] = (browser,)
