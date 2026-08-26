@@ -17,8 +17,9 @@ def get_base_options() -> dict:
     options["impersonate"] = ImpersonateTarget.from_str("chrome")
     
     # Avoid clients that frequently cause UNPLAYABLE or PO Token errors
+    # Force android and ios clients which don't trigger the "page needs to be reloaded" web block
     options["extractor_args"] = {
-        "youtube": ["player_client=default,-tv,-web_safari,-web_embedded,-mweb"]
+        "youtube": ["player_client=android,ios"]
     }
     
     # Enable NodeJS for solving YouTube's JS challenges (Deno is default)
