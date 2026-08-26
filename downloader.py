@@ -22,7 +22,9 @@ def get_base_options() -> dict:
     }
     
     # Enable NodeJS for solving YouTube's JS challenges (Deno is default)
-    options["js_rt"] = "node"
+    options["js_runtimes"] = "node"
+
+
 
 
     
