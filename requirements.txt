@@ -1,4 +1,6 @@
 aiogram>=3.0.0
-yt-dlp[default,curl-cffi] @ git+https://github.com/yt-dlp/yt-dlp.git
+yt-dlp[default]
+yt-dlp-ejs
+ytdlp-jsc
 python-dotenv
 static-ffmpeg

@@ -11,27 +11,6 @@ import os
 
 def get_base_options() -> dict:
     options = {}
-    
-    # Bypass "The page needs to be reloaded" bot detection
-    from yt_dlp.networking.impersonate import ImpersonateTarget
-    options["impersonate"] = ImpersonateTarget.from_str("chrome")
-    
-    # Avoid clients that frequently cause UNPLAYABLE or PO Token errors
-    # Force android and ios clients which don't trigger the "page needs to be reloaded" web block
-    options["extractor_args"] = {
-        "youtube": ["player_client=android,ios"]
-    }
-    
-    # Enable NodeJS for solving YouTube's JS challenges (Deno is default)
-    options["js_runtimes"] = {
-        "node": {"path": "node"}
-    }
-
-
-
-
-
-    
     browser = os.getenv("COOKIES_BROWSER", "edge")
     if browser.lower() != "none":
         options["cookiesfrombrowser"] = (browser,)
