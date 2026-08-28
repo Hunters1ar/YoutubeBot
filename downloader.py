@@ -28,6 +28,10 @@ def get_base_options() -> dict:
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
+        "concurrent_fragment_downloads": 5,  # Download video chunks in parallel (3x - 5x faster)
+        "buffersize": 1024 * 64,             # 64KB read buffer
+        "http_chunk_size": 10485760,         # 10MB chunk size for high-speed streaming
+        "socket_timeout": 15,
     }
     
     cookies_file = os.getenv("COOKIES_FILE", "cookies.txt")
@@ -43,6 +47,7 @@ def get_base_options() -> dict:
         options["http_headers"] = {"User-Agent": user_agent}
         
     return options
+
 
 def get_video_info(url: str) -> dict:
     options = {
