@@ -77,18 +77,14 @@ async def handle_url(message: types.Message):
         if row:
             keyboard_buttons.append(row)
             
-        # Add audio option
+        # Add audio and thumbnail buttons
         audio_text = "🎵 Audio (MP3)"
         if info.get('audio_size_mb', 0) > 0:
             audio_text += f" (~{info['audio_size_mb']:.1f}MB)"
         
-        # Add extra features row
         keyboard_buttons.append([
-            InlineKeyboardButton(text=audio_text, callback_data="dl_audio")
-        ])
-        keyboard_buttons.append([
-            InlineKeyboardButton(text="🖼️ Thumbnail", callback_data="dl_thumb"),
-            InlineKeyboardButton(text="📝 Subtitles", callback_data="dl_subs")
+            InlineKeyboardButton(text=audio_text, callback_data="dl_audio"),
+            InlineKeyboardButton(text="🖼️ Thumbnail", callback_data="dl_thumb")
         ])
         
         keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
@@ -177,11 +173,7 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
         video_title = info.get("title", "Audio Track")
         channel_name = info.get("channel", "YouTube")
 
-        if action == "dl_subs":
-            dl_task = asyncio.create_task(
-                asyncio.to_thread(downloader.download_subtitles, url, job_id)
-            )
-        elif action.startswith("dl_v_"):
+        if action.startswith("dl_v_"):
             res = int(action.split("_")[2])
             dl_task = asyncio.create_task(
                 asyncio.to_thread(downloader.download_video, url, job_id, res, progress_dict)
@@ -225,13 +217,7 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
         file = FSInputFile(path=filepath)
         reply_id = callback_query.message.reply_to_message.message_id if callback_query.message.reply_to_message else None
         
-        if action == "dl_subs":
-            await bot.send_document(
-                chat_id=callback_query.message.chat.id, 
-                document=file,
-                reply_to_message_id=reply_id
-            )
-        elif action.startswith("dl_v_"):
+        if action.startswith("dl_v_"):
             await bot.send_video(
                 chat_id=callback_query.message.chat.id, 
                 video=file,

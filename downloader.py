@@ -178,26 +178,5 @@ def download_audio(url: str, job_id: str, progress_dict: dict = None) -> Path:
         filepath = Path(original_filename).with_suffix(".mp3")
         return filepath
 
-def download_subtitles(url: str, job_id: str) -> Path:
-    job_dir = DOWNLOADS_DIR / job_id
-    job_dir.mkdir(parents=True, exist_ok=True)
-    
-    options = {
-        **get_base_options(),
-        "skip_download": True,
-        "writesubtitles": True,
-        "writeautomaticsub": True,
-        "subtitleslangs": ["en", "ru"],
-        "subtitlesformat": "srt/vtt/best",
-        "outtmpl": str(job_dir / "%(title)s.%(ext)s"),
-    }
-    
-    with yt_dlp.YoutubeDL(options) as ydl:
-        ydl.extract_info(url, download=True)
-        
-        for file in job_dir.iterdir():
-            if file.suffix in [".srt", ".vtt"]:
-                return file
-    return None
 
 
