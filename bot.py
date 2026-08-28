@@ -93,7 +93,7 @@ async def handle_url(message: types.Message):
         title = str(info.get('title', 'Unknown')).replace('*', '').replace('_', '')
         channel = str(info.get('channel', 'Unknown')).replace('*', '').replace('_', '')
         
-        caption = f"🎬 *{title}*\n👤 {channel}\n\nSelect format to download directly:"
+        caption = f"🎬 *{title}*\n👤 {channel}\n\nSelect format:"
         
         photo_msg = await message.answer_photo(
             photo=info["thumbnail"],
@@ -218,23 +218,41 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
         reply_id = callback_query.message.reply_to_message.message_id if callback_query.message.reply_to_message else None
         
         if action.startswith("dl_v_"):
-            await bot.send_video(
-                chat_id=callback_query.message.chat.id, 
-                video=file,
-                caption=f"🎬 *{video_title}*",
-                parse_mode="Markdown",
-                reply_to_message_id=reply_id
-            )
+            try:
+                await bot.send_video(
+                    chat_id=callback_query.message.chat.id, 
+                    video=file,
+                    caption=f"🎬 *{video_title}*",
+                    parse_mode="Markdown",
+                    reply_to_message_id=reply_id
+                )
+            except Exception:
+                await bot.send_video(
+                    chat_id=callback_query.message.chat.id, 
+                    video=file,
+                    caption=f"🎬 *{video_title}*",
+                    parse_mode="Markdown"
+                )
         else:
-            await bot.send_audio(
-                chat_id=callback_query.message.chat.id, 
-                audio=file,
-                title=video_title,
-                performer=channel_name,
-                caption=f"🎵 *{video_title}*",
-                parse_mode="Markdown",
-                reply_to_message_id=reply_id
-            )
+            try:
+                await bot.send_audio(
+                    chat_id=callback_query.message.chat.id, 
+                    audio=file,
+                    title=video_title,
+                    performer=channel_name,
+                    caption=f"🎵 *{video_title}*",
+                    parse_mode="Markdown",
+                    reply_to_message_id=reply_id
+                )
+            except Exception:
+                await bot.send_audio(
+                    chat_id=callback_query.message.chat.id, 
+                    audio=file,
+                    title=video_title,
+                    performer=channel_name,
+                    caption=f"🎵 *{video_title}*",
+                    parse_mode="Markdown"
+                )
             
         # Clean up the menu message
         try:
