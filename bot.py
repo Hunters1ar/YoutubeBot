@@ -118,17 +118,25 @@ async def handle_url(message: types.Message):
 async def handle_download_callback(callback_query: types.CallbackQuery):
     action = callback_query.data
     
+    # Acknowledge the callback immediately so Telegram doesn't time out
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+    
     # Retrieve URL from memory store
     msg_id = callback_query.message.message_id
     if msg_id not in url_store:
-        await callback_query.answer("Session expired. Please send the link again.", show_alert=True)
+        try:
+            await callback_query.message.reply("Session expired. Please send the YouTube link again.")
+        except Exception:
+            pass
         return
         
     url = url_store[msg_id]
     
     # Handle Thumbnail immediately (no heavy download needed)
     if action == "dl_thumb":
-        await callback_query.answer("Sending thumbnail...")
         info = await asyncio.to_thread(downloader.get_video_info, url)
         if info.get("thumbnail"):
             await bot.send_document(
@@ -138,15 +146,16 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
                 parse_mode="Markdown",
                 reply_to_message_id=callback_query.message.reply_to_message.message_id if callback_query.message.reply_to_message else None
             )
-        else:
-            await callback_query.answer("No thumbnail available.", show_alert=True)
         return
 
     original_caption = callback_query.message.caption or ""
-    await callback_query.message.edit_caption(
-        caption=f"{original_caption}\n\n⏳ **Starting download...**",
-        parse_mode="Markdown"
-    )
+    try:
+        await callback_query.message.edit_caption(
+            caption=f"{original_caption}\n\n⏳ **Starting download...**",
+            parse_mode="Markdown"
+        )
+    except Exception:
+        pass
     
     # Send downloading sticker if available
     sticker_msg = None
@@ -164,6 +173,10 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
     progress_dict = {}
     
     try:
+        info = await asyncio.to_thread(downloader.get_video_info, url)
+        video_title = info.get("title", "Audio Track")
+        channel_name = info.get("channel", "YouTube")
+
         if action == "dl_subs":
             dl_task = asyncio.create_task(
                 asyncio.to_thread(downloader.download_subtitles, url, job_id)
@@ -201,10 +214,13 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
             await callback_query.message.edit_caption(caption=f"{original_caption}\n\n❌ Could not find the requested file.")
             return
             
-        await callback_query.message.edit_caption(
-            caption=f"{original_caption}\n\n📤 **Uploading to Telegram...**",
-            parse_mode="Markdown"
-        )
+        try:
+            await callback_query.message.edit_caption(
+                caption=f"{original_caption}\n\n📤 **Uploading to Telegram...**",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
         
         file = FSInputFile(path=filepath)
         reply_id = callback_query.message.reply_to_message.message_id if callback_query.message.reply_to_message else None
@@ -219,17 +235,26 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
             await bot.send_video(
                 chat_id=callback_query.message.chat.id, 
                 video=file,
+                caption=f"🎬 *{video_title}*",
+                parse_mode="Markdown",
                 reply_to_message_id=reply_id
             )
         else:
             await bot.send_audio(
                 chat_id=callback_query.message.chat.id, 
                 audio=file,
+                title=video_title,
+                performer=channel_name,
+                caption=f"🎵 *{video_title}*",
+                parse_mode="Markdown",
                 reply_to_message_id=reply_id
             )
             
         # Clean up the menu message
-        await callback_query.message.delete()
+        try:
+            await callback_query.message.delete()
+        except Exception:
+            pass
         
     except Exception as e:
         try:
@@ -244,8 +269,7 @@ async def handle_download_callback(callback_query: types.CallbackQuery):
                 await sticker_msg.delete()
             except Exception:
                 pass
-            
-    await callback_query.answer()
+
 
 async def main():
     print("Starting direct YouTube downloader bot...")
