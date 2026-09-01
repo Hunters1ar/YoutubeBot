@@ -92,8 +92,9 @@ def download_audio(url: str, job_id: str, progress_dict: dict = None) -> Path:
             "preferredcodec": "mp3",
             "preferredquality": "192",
         }],
-        "outtmpl": str(job_dir / "%(id)s.%(ext)s"),
+        "outtmpl": str(job_dir / f"{job_id}.%(ext)s"),
         "restrictfilenames": True,
+        "windowsfilenames": True,
     }
 
     if progress_dict is not None:
