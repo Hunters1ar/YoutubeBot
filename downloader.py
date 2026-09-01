@@ -87,11 +87,17 @@ def download_audio(url: str, job_id: str, progress_dict: dict = None) -> Path:
     options = {
         **get_base_options(),
         "format": "bestaudio/best",
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }],
+        "writethumbnail": True,
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            },
+            {
+                "key": "EmbedThumbnail",
+            },
+        ],
         "outtmpl": str(job_dir / f"{job_id}.%(ext)s"),
         "restrictfilenames": True,
         "windowsfilenames": True,
