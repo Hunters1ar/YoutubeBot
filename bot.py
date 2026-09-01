@@ -467,7 +467,14 @@ async def handle_play(callback_query: types.CallbackQuery):
     except Exception:
         pass
 
-    # Find track info from cache
+    # Find track info from cache (fetch if empty)
+    global tracks_cache
+    if not tracks_cache:
+        try:
+            await fetch_tracks()
+        except Exception:
+            pass
+
     track_title = "Audio Track"
     track_thumb = ""
     track_source = "Hunterstar Radio"
@@ -536,6 +543,20 @@ async def handle_play(callback_query: types.CallbackQuery):
             pass
 
         file = FSInputFile(path=filepath)
+        thumb_file = None
+        thumb_path = None
+
+        if track_thumb:
+            try:
+                thumb_path = job_dir / "thumb.jpg"
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(track_thumb) as resp:
+                        if resp.status == 200:
+                            with open(thumb_path, 'wb') as f:
+                                f.write(await resp.read())
+                            thumb_file = FSInputFile(path=thumb_path)
+            except Exception:
+                pass
 
         await bot.send_audio(
             chat_id=callback_query.message.chat.id,
@@ -544,7 +565,7 @@ async def handle_play(callback_query: types.CallbackQuery):
             performer=track_source,
             caption=f"🎵 *{track_title}*\n📂 {track_source}",
             parse_mode="Markdown",
-            thumbnail=None,  # Telegram will use embedded MP3 art if available
+            thumbnail=thumb_file,
         )
 
         # Clean up status message
