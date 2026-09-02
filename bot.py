@@ -551,10 +551,10 @@ async def handle_play(callback_query: types.CallbackQuery):
             )
         )
 
-        # Live progress updater
+        # Live progress updater (gentle polling to avoid Telegram rate-limits)
         last_text = ""
         while not dl_task.done():
-            await asyncio.sleep(2)
+            await asyncio.sleep(4)
             if job_id in progress_dict:
                 progress_text = progress_dict[job_id]
                 new_text = f"⏳ **Downloading:**\n🎵 {track_title}\n\n{progress_text}"
