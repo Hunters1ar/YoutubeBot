@@ -34,10 +34,15 @@ def get_base_options() -> dict:
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
-        "concurrent_fragment_downloads": 5,
-        "buffersize": 1024 * 64,
-        "http_chunk_size": 10485760,
+        "concurrent_fragment_downloads": 8,
+        "buffersize": 1024 * 128,
+        "http_chunk_size": 20971520,
         "socket_timeout": 15,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web"],
+            }
+        },
     }
 
     cookies_file = os.getenv("COOKIES_FILE", "cookies.txt")

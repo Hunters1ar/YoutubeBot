@@ -34,6 +34,28 @@ dp = Dispatcher()
 API_BASE = os.getenv("API_BASE", "https://api.hunterstar.uz")
 TRACKS_PER_PAGE = 8
 
+# ─── Persistent Telegram Audio Cache ──────────────────────────────────────────
+AUDIO_CACHE_FILE = Path("audio_cache.json")
+audio_file_id_cache: dict[str, str] = {}
+
+def load_audio_cache():
+    global audio_file_id_cache
+    if AUDIO_CACHE_FILE.exists():
+        try:
+            with open(AUDIO_CACHE_FILE, "r", encoding="utf-8") as f:
+                audio_file_id_cache = json.load(f)
+        except Exception:
+            audio_file_id_cache = {}
+
+def save_audio_cache():
+    try:
+        with open(AUDIO_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(audio_file_id_cache, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+load_audio_cache()
+
 # ─── In-memory cache ────────────────────────────────────────────────────────
 tracks_cache: list[dict] = []          # [{ id, title, thumb, source }]
 playlists_cache: list[str] = []        # unique playlist names
@@ -485,6 +507,22 @@ async def handle_play(callback_query: types.CallbackQuery):
             track_source = t["source"]
             break
 
+    # Instant send if already cached on Telegram!
+    if video_id in audio_file_id_cache:
+        try:
+            await bot.send_audio(
+                chat_id=callback_query.message.chat.id,
+                audio=audio_file_id_cache[video_id],
+                title=track_title,
+                performer=track_source,
+                caption=f"🎵 *{track_title}*\n📂 {track_source}",
+                parse_mode="Markdown",
+            )
+            return
+        except Exception:
+            # In case cached file_id expired, proceed to download
+            pass
+
     # Send status message
     status_msg = await callback_query.message.reply(
         f"⏳ **Downloading:**\n🎵 {track_title}\n\nPlease wait...",
@@ -544,7 +582,7 @@ async def handle_play(callback_query: types.CallbackQuery):
 
         file = FSInputFile(path=filepath)
 
-        await bot.send_audio(
+        sent_msg = await bot.send_audio(
             chat_id=callback_query.message.chat.id,
             audio=file,
             title=track_title,
@@ -553,6 +591,11 @@ async def handle_play(callback_query: types.CallbackQuery):
             parse_mode="Markdown",
             thumbnail=None,  # Telegram will use embedded MP3 art if available
         )
+
+        # Save Telegram file_id to persistent cache for instant delivery next time
+        if sent_msg and sent_msg.audio:
+            audio_file_id_cache[video_id] = sent_msg.audio.file_id
+            save_audio_cache()
 
         # Clean up status message
         try:
